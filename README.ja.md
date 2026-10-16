@@ -18,7 +18,7 @@ cache-band は [Mini System Monitor](https://github.com/mlabo-org/mini-system-mo
 | --- | --- | --- |
 | すでに Mini System Monitor を使っている | [導入](#導入)の手順2・3・4。手順2で JSON が出ずにモニターの画面が開いたら、その版はこの機能より古いので、先に更新する（手順1を `--replace` 付きで） | 3つの数字すべて。モニターの画面や設定は変わりません |
 | まだ使っていない | [導入](#導入)の手順1〜4 | 3つの数字すべて。モニターの画面（CPU、メモリ、Codex と Claude の残量）も手に入りますが、帯のために開いておく必要はありません |
-| モニターは入れたくない | 手順3だけ | 「直近」だけ。その後ろにずっと `セッション・全体 -- (Mini System Monitor が見つからない)` が出ます。この使い方はそれ以上は想定していません |
+| モニターは入れたくない | 手順3だけ | 「直近」だけ。モニターについては何も表示しません |
 
 モニター側の README にも、同じ分け方で書いてあります：[単体で使う・cache-band と併用する](https://github.com/mlabo-org/mini-system-monitor-rs/blob/main/README.ja.md#単体で使うcache-band-と併用する)
 
@@ -31,7 +31,7 @@ cache-band は [Mini System Monitor](https://github.com/mlabo-org/mini-system-mo
 | セッションと全体60分 | `/Applications/Mini System Monitor.app` に入った [Mini System Monitor](https://github.com/mlabo-org/mini-system-monitor-rs)（コミット `1f92771`、2026-10-17 以降） | [導入](#導入)の手順2 |
 | モニターのビルド | モニターの `rust-toolchain.toml` で固定された Rust ツールチェーンと Xcode Command Line Tools | `cargo --version`、`xcode-select -p` |
 
-「直近」は Claude Code だけで出ます。モニターがなくても帯には「直近」が出て、その後ろに残り2つが出ない理由が表示されます（[困ったとき](#困ったとき)）。
+「直近」は Claude Code だけで出ます。モニターが入っていなければ、帯は「直近」だけを出し、モニターについては何も言いません。入れないのは本人の選択で、故障ではないからです。モニターが入っているのに古い・動かないときは、数字を期待しているはずなので、帯にその理由を出します（[困ったとき](#困ったとき)）。
 
 モニターに配布用のビルド済みファイルはなく、ソースからビルドします。モニターが必要な理由：mod のファイル読み込みは 4 MiB までで、長いセッションの記録はそれを超えます（30 MiB 以上になることもある）。そのため mod は自分では記録を数えられません。モニターは自分の画面のために記録をすでに数えていて、同じ集計を JSON で出せるので、帯とモニターの数字は必ず一致します。
 
@@ -113,10 +113,9 @@ claude plugin install cache-band@cache-band
 | 帯の表示 | 原因 | 直し方 |
 | --- | --- | --- |
 | `cache` の行がない | セッションがまだ始まっていない、または mod が入っていない | 何か送ってみる。それでも出なければ `claude plugin list` に `cache-band` があるか見る |
-| `セッション・全体 -- (Mini System Monitor が見つからない)` | `monitorPath` にファイルがない | モニターを入れる（手順1）か、`monitorPath` を実際の場所に変える |
 | `セッション・全体 -- (Mini System Monitor が古い。更新が必要)` | 実行ファイルに `--claude-cache-json` が含まれていない | モニターを終了し、最新のソースから `--replace` で入れ直す |
 | `セッション・全体 -- (Mini System Monitor の実行に失敗)` | モニターが動いたが、エラーで終わったか JSON 以外を出した | 手順2のコマンドを自分で実行してエラーを読む |
-| 「直近」だけで後ろに何もない | 最初の更新がまだ終わっていない | 次のターンか30秒待つ |
+| 「直近」だけで、セッションと全体60分がずっと出ない | `monitorPath` にモニターがない（わざとこう表示しています） | モニターを入れる（手順1）か、`monitorPath` を実際の場所に変える |
 
 mod は、この機能に対応していないモニターを実行しません。古いモニターは引数を無視してウィンドウを開いてしまうため、最初に実行する前に、実行ファイルに `--claude-cache-json` という文字列が含まれているかを確かめています。
 

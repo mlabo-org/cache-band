@@ -15,16 +15,14 @@ const FLAG = '--claude-cache-json'
 // The monitor reads every transcript touched in the last hour; a few hundred ms
 const REFRESH_EVERY_MS = 30_000
 
-const WORDS: Record<'ja' | 'en', Record<'lastTurn' | 'session' | 'window' | 'read' | 'write' | CacheProblem, string>> = {
+const WORDS: Record<'ja' | 'en', Record<'lastTurn' | 'session' | 'window' | 'read' | 'write' | Exclude<CacheProblem, 'missing'>, string>> = {
   ja: {
     lastTurn: '直近', session: 'セッション', window: '全体{minutes}分', read: '読', write: '書',
-    missing: 'セッション・全体 -- (Mini System Monitor が見つからない)',
     outdated: 'セッション・全体 -- (Mini System Monitor が古い。更新が必要)',
     failed: 'セッション・全体 -- (Mini System Monitor の実行に失敗)',
   },
   en: {
     lastTurn: 'last', session: 'session', window: 'all {minutes}m', read: 'read', write: 'write',
-    missing: 'session/all -- (Mini System Monitor not found)',
     outdated: 'session/all -- (Mini System Monitor too old; update it)',
     failed: 'session/all -- (Mini System Monitor failed)',
   },
@@ -159,27 +157,34 @@ export const register: Register = (on, options) => {
       )
     }
 
-    // The last turn needs no monitor, so it shows even when the monitor is the problem
+    // The last turn needs no monitor, so it shows whatever the monitor's state.
+    // No monitor at all is a choice, not a fault: its figures are left out without
+    // a word. A monitor that is there but too old or failing is named, since its
+    // owner expects the figures.
     const trouble = await read($, problem)
-    const row = (
-      <Box>
-        <Text dimColor>cache </Text>
-        {part(t.lastTurn, turn, false)}
-        {trouble !== null ? (
-          <Text color="yellow">{t[trouble]}</Text>
-        ) : (
-          <Box>
-            {part(t.session, current?.session ?? null, true)}
-            {current?.window == null ? null : <Text dimColor>│ </Text>}
-            {part(t.window.replace('{minutes}', String(current?.windowMinutes ?? 60)), current?.window ?? null, true)}
-          </Box>
-        )}
-      </Box>
-    )
+    const last = part(t.lastTurn, turn, false)
+    const rest =
+      trouble === 'missing' ? null : trouble !== null ? (
+        <Text color="yellow">{t[trouble]}</Text>
+      ) : (
+        <Box>
+          {part(t.session, current?.session ?? null, true)}
+          {current?.window == null ? null : <Text dimColor>│ </Text>}
+          {part(t.window.replace('{minutes}', String(current?.windowMinutes ?? 60)), current?.window ?? null, true)}
+        </Box>
+      )
+    const row =
+      last === null && (rest === null || (trouble === null && current === null)) ? null : (
+        <Box>
+          <Text dimColor>cache </Text>
+          {last}
+          {rest}
+        </Box>
+      )
 
     return (
       <Box flexDirection="column">
-        {row}
+        {row ?? null}
         {below ?? null}
       </Box>
     )

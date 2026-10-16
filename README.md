@@ -23,7 +23,7 @@ band needs the monitor for two of its three figures.
 | --- | --- | --- |
 | You already use Mini System Monitor | [Install](#install) steps 2, 3, 4. If step 2 opens the monitor's window instead of printing JSON, your build is older than the flag: update it first (step 1, with `--replace`) | All three figures. The monitor's window and settings are not changed |
 | You do not use it yet | [Install](#install) steps 1 to 4 | All three figures. You also get the monitor's window (CPU, memory, Codex and Claude quota), but it does not have to be open for the band |
-| You do not want the monitor | Only step 3 | `last` only. The band keeps showing `session/all -- (Mini System Monitor not found)` after it; this setup is not otherwise supported |
+| You do not want the monitor | Only step 3 | `last` only, with nothing said about the monitor |
 
 The monitor's README has the same split from its side:
 [Use it alone or with cache-band](https://github.com/mlabo-org/mini-system-monitor-rs#use-it-alone-or-with-cache-band).
@@ -37,9 +37,10 @@ The monitor's README has the same split from its side:
 | `session` and `all 60m` | [Mini System Monitor](https://github.com/mlabo-org/mini-system-monitor-rs) at commit `1f92771` (2026-10-17) or later, installed at `/Applications/Mini System Monitor.app` | see [Install](#install), step 2 |
 | building the monitor | The Rust toolchain pinned by the monitor's `rust-toolchain.toml`, and Xcode Command Line Tools | `cargo --version`, `xcode-select -p` |
 
-`last` needs nothing but Claude Code. Without the monitor the band still shows
-it, followed by the reason the other two are missing (see
-[Troubleshooting](#troubleshooting)).
+`last` needs nothing but Claude Code. With no monitor installed, the band shows
+`last` alone and says nothing about the monitor: leaving it out is a choice, not
+a fault. A monitor that is installed but too old or failing is named in the band
+(see [Troubleshooting](#troubleshooting)), since its owner expects the figures.
 
 The monitor has no prebuilt download; it is built from source. Why the mod
 needs it: a mod's file reads stop at 4 MiB, and a long session's transcript is
@@ -142,10 +143,9 @@ Set them in the `/config` panel, or with
 | The band shows | Cause | Fix |
 | --- | --- | --- |
 | no `cache` line at all | The session has not started yet, or the mod is not installed | Send a message; then check `claude plugin list` for `cache-band` |
-| `session/all -- (Mini System Monitor not found)` | No file at `monitorPath` | Install the monitor (step 1), or set `monitorPath` to where it is |
 | `session/all -- (Mini System Monitor too old; update it)` | The executable does not contain `--claude-cache-json` | Quit the monitor and reinstall it from the latest source with `--replace` |
 | `session/all -- (Mini System Monitor failed)` | The monitor ran but exited with an error or printed something that is not its JSON | Run the command in step 2 yourself and read its error |
-| `last` only, nothing after it | The first refresh has not finished | Wait for the next turn or 30 seconds |
+| `last` only, never `session` or `all 60m` | No monitor at `monitorPath` (shown this way on purpose) | Install the monitor (step 1), or set `monitorPath` to where it is |
 
 The mod never runs a monitor that lacks the flag: before the first run it
 checks that the executable contains the text `--claude-cache-json`, because an
