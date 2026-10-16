@@ -83,6 +83,8 @@ claude plugin marketplace add mlabo-org/cache-band
 claude plugin install cache-band@cache-band
 ```
 
+成功すると `Successfully installed plugin: cache-band@cache-band` と出ます。続けて出る `2 userConfig options not yet set` は問題ありません。2つの設定はどちらも既定値を持っているので（[設定](#設定)）、モニターを `/Applications` 以外に入れたとき以外は何も設定しなくて構いません。
+
 ### 4. 新しいセッションを始める
 
 帯は、新しいセッションの最初の返事と一緒に出ます。何も送っていない新規セッションの画面には出ません。mod はセッションが始まってから動くためです。
@@ -121,7 +123,7 @@ mod は、この機能に対応していないモニターを実行しません�
 
 ## 読むもの・実行するもの
 
-- セッションごとに1回、モニターの実行ファイルに対して `/usr/bin/grep` を実行します（上の確認）。そのあとモニターを `--claude-cache-json --session <セッションID>` で実行します
+- モニターの実行ファイルに対して `/usr/bin/grep` を実行します（上の確認）。確認が通るまでと、実行に失敗したあとに実行します。そのあとモニターを `--claude-cache-json --session <セッションID>` で実行します。`monitorPath` にモニターがなければ何も実行しません
 - モニターは `CLAUDE_CONFIG_DIR`（未指定なら `~/.claude`）の下の `projects/**/*.jsonl` を読み、トークン数だけを出します。何も書き込まず、送信もせず、そのセッションの帯の表示以外には残しません
 
 ## 動作確認

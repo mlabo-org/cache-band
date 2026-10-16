@@ -94,6 +94,8 @@ async function refresh($: EngineInterface, option: unknown) {
     await update($, reading, () => next)
     await update($, problem, () => null)
   } catch {
+    // Check again next time: the monitor may have been removed or replaced
+    supported = null
     await update($, problem, () => 'failed')
   }
 }

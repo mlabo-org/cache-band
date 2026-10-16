@@ -100,6 +100,11 @@ claude plugin marketplace add mlabo-org/cache-band
 claude plugin install cache-band@cache-band
 ```
 
+Success: `Successfully installed plugin: cache-band@cache-band`. The note
+`2 userConfig options not yet set` that follows is expected: both options have
+defaults (see [Options](#options)), so nothing needs configuring unless the
+monitor is installed somewhere other than `/Applications`.
+
 ### 4. Start a new session
 
 The band appears with the first reply of a new session, not on the empty
@@ -153,8 +158,10 @@ older monitor ignores its arguments and opens its window.
 
 ## What it reads and runs
 
-- Runs `/usr/bin/grep` once per session on the monitor's executable (the check
-  above), then the monitor with `--claude-cache-json --session <session id>`.
+- Runs `/usr/bin/grep` on the monitor's executable (the check above) until it
+  passes, and again after a failed run; then the monitor with
+  `--claude-cache-json --session <session id>`. With no monitor at
+  `monitorPath`, it runs nothing.
 - The monitor reads `projects/**/*.jsonl` under `CLAUDE_CONFIG_DIR` (default
   `~/.claude`) and prints token counts only. Nothing is written, sent or kept
   beyond the current session's band.
