@@ -1,0 +1,20 @@
+{
+  "name": "cache-band",
+  "version": "0.1.0",
+  "description": "Claude Code mod: one line above the prompt with the prompt-cache read rate of the last turn, this session and the whole Mac over the last hour, as Mini System Monitor counts it",
+  "author": {
+    "name": "Makoto Suzuki",
+    "url": "https://github.com/mlabo-org"
+  },
+  "types": "./types/index.d.ts",
+  "license": "MIT",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Language",
+      "description": "The language of the band's words. auto follows Claude Code's language setting (Japanese when it names Japanese, English otherwise); ja or en fixes it.",
+      "default": "auto",
+      "options": ["auto", "ja", "en"]
+    }
+  }
+}
