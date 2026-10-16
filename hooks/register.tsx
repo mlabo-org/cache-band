@@ -1,22 +1,33 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, TurnUsage } from 'claude-code'
 
-import type { CacheReading, CacheTotals } from '../types'
+import type { CacheProblem, CacheReading, CacheTotals } from '../types'
 
 const reading = atom({ plugin: 'cache-band', key: 'reading' } as const, null)
 const lastTurn = atom({ plugin: 'cache-band', key: 'lastTurn' } as const, null)
-const failed = atom({ plugin: 'cache-band', key: 'failed' } as const, false)
+const problem = atom({ plugin: 'cache-band', key: 'problem' } as const, null)
 
 // Mini System Monitor owns the counting: the same code that fills its Claude view
 // prints it as JSON, so the band and the monitor never disagree
-const MONITOR = '/Applications/Mini System Monitor.app/Contents/MacOS/mini-system-monitor-rs'
+export const DEFAULT_MONITOR = '/Applications/Mini System Monitor.app/Contents/MacOS/mini-system-monitor-rs'
+const FLAG = '--claude-cache-json'
 
 // The monitor reads every transcript touched in the last hour; a few hundred ms
 const REFRESH_EVERY_MS = 30_000
 
-const WORDS = {
-  ja: { lastTurn: '直近', session: 'セッション', window: '全体{minutes}分', read: '読', write: '書', missing: 'cache -- (システムモニターから取れない)' },
-  en: { lastTurn: 'last', session: 'session', window: 'all {minutes}m', read: 'read', write: 'write', missing: 'cache -- (Mini System Monitor unavailable)' },
+const WORDS: Record<'ja' | 'en', Record<'lastTurn' | 'session' | 'window' | 'read' | 'write' | CacheProblem, string>> = {
+  ja: {
+    lastTurn: '直近', session: 'セッション', window: '全体{minutes}分', read: '読', write: '書',
+    missing: 'セッション・全体 -- (Mini System Monitor が見つからない)',
+    outdated: 'セッション・全体 -- (Mini System Monitor が古い。更新が必要)',
+    failed: 'セッション・全体 -- (Mini System Monitor の実行に失敗)',
+  },
+  en: {
+    lastTurn: 'last', session: 'session', window: 'all {minutes}m', read: 'read', write: 'write',
+    missing: 'session/all -- (Mini System Monitor not found)',
+    outdated: 'session/all -- (Mini System Monitor too old; update it)',
+    failed: 'session/all -- (Mini System Monitor failed)',
+  },
 }
 
 type MonitorTotals = { input: number; cache_read: number; cache_write: number; partial: boolean }
@@ -53,16 +64,39 @@ export const rateColor = (percent: number) => (percent >= 90 ? 'green' : percent
 export const short = (n: number) =>
   n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`
 
-async function refresh($: EngineInterface) {
+export const monitorPathOf = (option: unknown) =>
+  typeof option === 'string' && option.trim() !== '' ? option.trim() : DEFAULT_MONITOR
+
+// The monitor path whose executable is known to have the flag. A monitor from
+// before the flag ignores its arguments and opens its window, so it is never run
+// until its file is seen to contain the flag's name.
+let supported: string | null = null
+
+async function check($: EngineInterface, monitor: string): Promise<CacheProblem | null> {
+  if (supported === monitor) return null
+  if (!(await $.fs.exists(monitor))) return 'missing'
+  const { exitCode } = await $.process.run(['/usr/bin/grep', '-q', '-a', '-F', '--', FLAG, monitor], { timeoutMs: 10_000 })
+  if (exitCode !== 0) return 'outdated'
+  supported = monitor
+  return null
+}
+
+async function refresh($: EngineInterface, option: unknown) {
+  const monitor = monitorPathOf(option)
   try {
+    const found = await check($, monitor)
+    if (found !== null) {
+      await update($, problem, () => found)
+      return
+    }
     const id = await $.session.id()
-    const { exitCode, stdout } = await $.process.run([MONITOR, '--claude-cache-json', '--session', id], { timeoutMs: 10_000 })
+    const { exitCode, stdout } = await $.process.run([monitor, FLAG, '--session', id], { timeoutMs: 10_000 })
     if (exitCode !== 0) throw new Error(`exit ${exitCode}`)
     const next = parseMonitor(stdout)
     await update($, reading, () => next)
-    await update($, failed, () => false)
+    await update($, problem, () => null)
   } catch {
-    await update($, failed, () => true)
+    await update($, problem, () => 'failed')
   }
 }
 
@@ -75,9 +109,9 @@ async function wordsFor($: EngineInterface, option: unknown) {
 
 export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
-    void refresh($)
+    void refresh($, options.monitorPath)
     // A reload drops the old timer with the old module
-    $.clock.every(REFRESH_EVERY_MS, () => void refresh($))
+    $.clock.every(REFRESH_EVERY_MS, () => void refresh($, options.monitorPath))
 
     return next(e)
   })
@@ -89,7 +123,7 @@ export const register: Register = (on, options) => {
       const totals = turnTotals(e.usage)
       await update($, lastTurn, () => totals)
     }
-    void refresh($)
+    void refresh($, options.monitorPath)
 
     return result
   }).catch(($, e, next) => next(e))
@@ -125,18 +159,23 @@ export const register: Register = (on, options) => {
       )
     }
 
-    const row =
-      current === null && (await read($, failed)) ? (
-        <Text dimColor>{t.missing}</Text>
-      ) : (
-        <Box>
-          <Text dimColor>cache </Text>
-          {part(t.lastTurn, turn, false)}
-          {part(t.session, current?.session ?? null, true)}
-          {current?.window == null ? null : <Text dimColor>│ </Text>}
-          {part(t.window.replace('{minutes}', String(current?.windowMinutes ?? 60)), current?.window ?? null, true)}
-        </Box>
-      )
+    // The last turn needs no monitor, so it shows even when the monitor is the problem
+    const trouble = await read($, problem)
+    const row = (
+      <Box>
+        <Text dimColor>cache </Text>
+        {part(t.lastTurn, turn, false)}
+        {trouble !== null ? (
+          <Text color="yellow">{t[trouble]}</Text>
+        ) : (
+          <Box>
+            {part(t.session, current?.session ?? null, true)}
+            {current?.window == null ? null : <Text dimColor>│ </Text>}
+            {part(t.window.replace('{minutes}', String(current?.windowMinutes ?? 60)), current?.window ?? null, true)}
+          </Box>
+        )}
+      </Box>
+    )
 
     return (
       <Box flexDirection="column">

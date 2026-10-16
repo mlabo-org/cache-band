@@ -1,20 +1,32 @@
 {
   "name": "cache-band",
   "version": "0.1.0",
-  "description": "Claude Code mod: one line above the prompt with the prompt-cache read rate of the last turn, this session and the whole Mac over the last hour, as Mini System Monitor counts it",
+  "description": "Claude Code mod: one line above the prompt with the prompt-cache read rate of the last turn, this session and the whole Mac over the last hour. macOS only; the session and Mac-wide figures need Mini System Monitor (github.com/mlabo-org/mini-system-monitor-rs) with --claude-cache-json.",
   "author": {
     "name": "Makoto Suzuki",
     "url": "https://github.com/mlabo-org"
   },
-  "types": "./types/index.d.ts",
+  "homepage": "https://github.com/mlabo-org/cache-band",
+  "repository": "https://github.com/mlabo-org/cache-band",
   "license": "MIT",
+  "types": "./types/index.d.ts",
   "userConfig": {
     "language": {
       "type": "string",
       "title": "Language",
       "description": "The language of the band's words. auto follows Claude Code's language setting (Japanese when it names Japanese, English otherwise); ja or en fixes it.",
       "default": "auto",
-      "options": ["auto", "ja", "en"]
+      "options": [
+        "auto",
+        "ja",
+        "en"
+      ]
+    },
+    "monitorPath": {
+      "type": "string",
+      "title": "Mini System Monitor executable",
+      "description": "Full path of the mini-system-monitor-rs executable inside the app bundle. Change it only when the app is installed somewhere other than /Applications.",
+      "default": "/Applications/Mini System Monitor.app/Contents/MacOS/mini-system-monitor-rs"
     }
   }
 }

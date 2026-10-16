@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { parseMonitor, rate, rateColor, short, turnTotals } from './register'
+import { DEFAULT_MONITOR, monitorPathOf, parseMonitor, rate, rateColor, short, turnTotals } from './register'
 
 test('reads the monitor JSON, session only when found', () => {
   const out = parseMonitor(
@@ -21,4 +21,10 @@ test('a turn counts input as the monitor does', () => {
   expect(rateColor(40)).toBe('red')
   expect(short(2_808_876)).toBe('2.8M')
   expect(short(110_102)).toBe('110k')
+})
+
+test('the monitor path option falls back to /Applications', () => {
+  expect(monitorPathOf(undefined)).toBe(DEFAULT_MONITOR)
+  expect(monitorPathOf('  ')).toBe(DEFAULT_MONITOR)
+  expect(monitorPathOf(' /Users/x/Applications/M.app/Contents/MacOS/m ')).toBe('/Users/x/Applications/M.app/Contents/MacOS/m')
 })

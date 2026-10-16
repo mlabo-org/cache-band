@@ -14,8 +14,12 @@ export type CacheReading = {
   windowMinutes: number
 }
 
+// Why the session and Mac-wide figures are missing: no executable at the monitor
+// path, a monitor from before --claude-cache-json, or a run that failed
+export type CacheProblem = 'missing' | 'outdated' | 'failed'
+
 declare module 'claude-code' {
   interface PluginState {
-    'cache-band': { reading: CacheReading | null; lastTurn: CacheTotals | null; failed: boolean }
+    'cache-band': { reading: CacheReading | null; lastTurn: CacheTotals | null; problem: CacheProblem | null }
   }
 }
