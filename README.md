@@ -13,6 +13,21 @@ cache last 99% session 84% (read 244k / write 46k) │ all 60m 97% (read 19.1M /
 Built for one person's Mac and published as a reference. It works anywhere the
 requirements below are met, and every requirement is checked by a command.
 
+## Which setup is yours
+
+cache-band is the companion of [Mini System Monitor](https://github.com/mlabo-org/mini-system-monitor-rs)
+(a macOS app with its own window). The monitor works without the band; the
+band needs the monitor for two of its three figures.
+
+| Your situation | What to do | What you get |
+| --- | --- | --- |
+| You already use Mini System Monitor | [Install](#install) steps 2, 3, 4. If step 2 opens the monitor's window instead of printing JSON, your build is older than the flag: update it first (step 1, with `--replace`) | All three figures. The monitor's window and settings are not changed |
+| You do not use it yet | [Install](#install) steps 1 to 4 | All three figures. You also get the monitor's window (CPU, memory, Codex and Claude quota), but it does not have to be open for the band |
+| You do not want the monitor | Only step 3 | `last` only. The band keeps showing `session/all -- (Mini System Monitor not found)` after it; this setup is not otherwise supported |
+
+The monitor's README has the same split from its side:
+[Use it alone or with cache-band](https://github.com/mlabo-org/mini-system-monitor-rs#use-it-alone-or-with-cache-band).
+
 ## Requirements
 
 | Needed for | What | Check |
