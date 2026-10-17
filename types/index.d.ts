@@ -18,8 +18,19 @@ export type CacheReading = {
 // path, a monitor from before --claude-cache-json, or a run that failed
 export type CacheProblem = 'missing' | 'outdated' | 'failed'
 
+// The band's own words, as templates with {placeholders}
+export type Words = {
+  lastTurn: string
+  session: string
+  window: string
+  read: string
+  write: string
+  outdated: string
+  failed: string
+}
+
 declare module 'claude-code' {
   interface PluginState {
-    'cache-band': { reading: CacheReading | null; lastTurn: CacheTotals | null; problem: CacheProblem | null }
+    'cache-band': { reading: CacheReading | null; lastTurn: CacheTotals | null; problem: CacheProblem | null; language: string | null; appLanguage: string | null; translations: Record<string, Words> | null }
   }
 }

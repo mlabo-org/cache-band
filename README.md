@@ -140,8 +140,19 @@ Set them in the `/config` panel, or with
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `language` | `auto` | `auto` follows Claude Code's `language` setting (Japanese when it names Japanese, English otherwise); `ja` or `en` fixes it. |
+| `language` | `auto` | The language of the band's words (see [Language](#language)); `ja` or `en` fixes it. |
 | `monitorPath` | `/Applications/Mini System Monitor.app/Contents/MacOS/mini-system-monitor-rs` | The monitor's executable, inside its app bundle. Change it only when the app is installed elsewhere. |
+
+## Language
+
+The band's own words (`last`, `session`, `all 60m`, `read`, `write` and the monitor messages) follow the language you use. The `cache` label stays English. With `language` at `auto`, the default:
+
+- In the desktop Code tab, the band follows the Claude desktop app's display language. It is read from `locale` in the app's own `~/Library/Application Support/Claude/config.json`: an internal file, not a documented interface, which also holds the app's sign-in cache, so the mod reads it again only when its modification time moves and keeps nothing but `locale`.
+- In the terminal (and in the desktop when the app's language cannot be read), it follows Claude Code's own `language` setting (the language Claude replies in), then the locale (`LC_ALL`, `LC_MESSAGES`, `LANG`). With neither, it is English.
+
+Japanese and English are written into the mod. Any other language is translated from English the first time it appears, by one small model call (`haiku`, through the session's own client, so it counts against your usage). Until it lands, the band shows English. The translation is kept in the plugin's `$.store` per language and reused by every session, and translated again only when the English words change. A translation that loses a `{placeholder}`, runs too long for the band, or is not well-formed is thrown away, and that language then stays in English, with no further call, until the English words change.
+
+A switch shows without a new session: a change of Claude Code's `language` in `/config` at once, any other change within 3 seconds. This is the same rule as [context-git-band](https://github.com/mlabo-org/context-git-band).
 
 ## Troubleshooting
 
@@ -165,6 +176,10 @@ older monitor ignores its arguments and opens its window.
 - The monitor reads `projects/**/*.jsonl` under `CLAUDE_CONFIG_DIR` (default
   `~/.claude`) and prints token counts only. Nothing is written, sent or kept
   beyond the current session's band.
+- For the band's language (see [Language](#language)): Claude Code's settings,
+  `LC_ALL`, `LC_MESSAGES`, `LANG`, and `locale` from the desktop app's
+  `config.json`. Only for a language other than Japanese and English, one
+  `haiku` call translates the band's English words, kept in the plugin's store.
 
 ## Check
 

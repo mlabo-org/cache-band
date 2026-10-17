@@ -29,7 +29,7 @@ const world = (on: On, monitor: 'absent' | 'old' | 'current', ran: string[][]) =
     ran.push([...e.argv])
     const isGrep = e.argv[0] === '/usr/bin/grep'
     const exitCode = isGrep && monitor === 'old' ? 1 : 0
-    return { value: { exitCode, stdout: isGrep ? '' : JSON_OUT, stderr: '' } }
+    return { value: { exitCode, stdout: isGrep ? '' : JSON_OUT, stderr: '', isStdoutTruncated: false, isStderrTruncated: false } }
   })
   on('ui.render', ($, e) => {
     const { Box } = $.ui.resolve(e)

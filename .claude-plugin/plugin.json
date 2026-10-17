@@ -14,7 +14,7 @@
     "language": {
       "type": "string",
       "title": "Language",
-      "description": "The language of the band's words. auto follows Claude Code's language setting (Japanese when it names Japanese, English otherwise); ja or en fixes it.",
+      "description": "The language of the band's words. auto follows the Claude desktop app's display language in the desktop Code tab, and elsewhere Claude Code's own language setting, then the locale; English with neither. Languages other than Japanese and English are translated once by a small model call (haiku) and kept. ja or en fixes it. The cache label stays English.",
       "default": "auto",
       "options": [
         "auto",

@@ -107,8 +107,19 @@ claude plugin install cache-band@cache-band
 
 | キー | 既定値 | 意味 |
 | --- | --- | --- |
-| `language` | `auto` | `auto` は Claude Code の `language` 設定に従います（日本語を指していれば日本語、それ以外は英語）。`ja` か `en` で固定。 |
+| `language` | `auto` | 帯の言葉の言語（[言語](#言語)を参照）。`ja` か `en` で固定。 |
 | `monitorPath` | `/Applications/Mini System Monitor.app/Contents/MacOS/mini-system-monitor-rs` | アプリの中にあるモニターの実行ファイル。アプリを別の場所に入れたときだけ変えます。 |
+
+## 言語
+
+帯の言葉（`直近`、`セッション`、`全体60分`、`読`、`書`、モニターについての表示）は、使っている言語に合わせます。`cache` の見出しは英語のままです。`language` が既定の `auto` のとき：
+
+- デスクトップの Code タブでは、Claude デスクトップアプリの表示言語に従います。アプリ自身の `~/Library/Application Support/Claude/config.json` の `locale` から読みます。これは公開された仕組みではない内部のファイルで、アプリのサインイン情報のキャッシュも入っているため、更新日時が変わったときだけ読み直し、`locale` 以外は持ちません。
+- ターミナル（と、アプリの言語を読めないときのデスクトップ）では、Claude Code の `language` 設定（Claude が返答する言語）、次にロケール（`LC_ALL`、`LC_MESSAGES`、`LANG`）に従います。どちらもなければ英語です。
+
+日本語と英語は mod に書き込んであります。それ以外の言語は、初めて出てきたときに英語から一度だけ翻訳します（小さなモデル `haiku` を、セッション自身の接続で1回呼びます。利用量に数えられます）。翻訳が届くまでは英語で表示します。翻訳は言語ごとにプラグインの `$.store` に保存してどのセッションでも使い回し、英語の言葉が変わったときだけ翻訳し直します。`{placeholder}` が抜けた、帯に収まらないほど長い、形が崩れている翻訳は捨て、その言語は英語の言葉が変わるまで英語のままにし、もう呼び出しません。
+
+切り替えは新しいセッションなしで反映されます。`/config` での Claude Code の `language` の変更はすぐに、それ以外の変更は3秒以内に。[context-git-band](https://github.com/mlabo-org/context-git-band) と同じ決まりです。
 
 ## 困ったとき
 
@@ -125,6 +136,7 @@ mod は、この機能に対応していないモニターを実行しません�
 
 - モニターの実行ファイルに対して `/usr/bin/grep` を実行します（上の確認）。確認が通るまでと、実行に失敗したあとに実行します。そのあとモニターを `--claude-cache-json --session <セッションID>` で実行します。`monitorPath` にモニターがなければ何も実行しません
 - モニターは `CLAUDE_CONFIG_DIR`（未指定なら `~/.claude`）の下の `projects/**/*.jsonl` を読み、トークン数だけを出します。何も書き込まず、送信もせず、そのセッションの帯の表示以外には残しません
+- 帯の言語のために（[言語](#言語)を参照）、Claude Code の設定、`LC_ALL`、`LC_MESSAGES`、`LANG`、デスクトップアプリの `config.json` の `locale` を読みます。日本語と英語以外の言語のときだけ、帯の英語の言葉を `haiku` で1回翻訳し、プラグインの保存領域に残します
 
 ## 動作確認
 
