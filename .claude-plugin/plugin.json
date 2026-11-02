@@ -1,6 +1,5 @@
 {
   "name": "cache-band",
-  "version": "0.1.0",
   "description": "Claude Code mod: one line above the prompt with the prompt-cache read rate of the last turn, this session and the whole Mac over the last hour. macOS only; the session and Mac-wide figures need Mini System Monitor (github.com/mlabo-org/mini-system-monitor-rs) with --claude-cache-json.",
   "author": {
     "name": "Makoto Suzuki",
